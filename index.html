@@ -1,0 +1,1427 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>IVI Widget Layout Prototype</title>
+  <style>
+:root {
+  --bg: #f3f4f6;
+  --panel: #ffffff;
+  --text: #15171b;
+  --muted: #6c727d;
+  --line: #dfe3e8;
+  --blue: #306cf4;
+  --blue-soft: #e9f0ff;
+  --danger: #df4c4c;
+  --success: #1d7b52;
+  --row-h: 92px;
+  --row-gap: 10px;
+  --mini-row-h: 56px;
+  --mini-row-gap: 7px;
+  --shadow: 0 14px 36px rgba(18, 25, 35, .10);
+}
+
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+button { font: inherit; }
+
+.app-shell { min-height: 100vh; }
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding: 18px 24px;
+  background: #101216;
+  color: white;
+}
+.topbar h1 { margin: 0 0 4px; font-size: 21px; }
+.topbar p { margin: 0; color: #aeb4be; font-size: 12px; }
+.top-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.control-panel {
+  display: flex;
+  align-items: end;
+  gap: 22px;
+  padding: 14px 24px;
+  background: white;
+  border-bottom: 1px solid var(--line);
+}
+.control-block { min-width: 330px; }
+.control-block.grow { flex: 1; }
+.label {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1;
+  letter-spacing: .08em;
+  font-weight: 800;
+  text-transform: uppercase;
+  margin-bottom: 7px;
+}
+.segmented { display: flex; gap: 7px; flex-wrap: wrap; }
+.seg-btn {
+  border: 1px solid var(--line);
+  background: #fff;
+  color: #30343a;
+  border-radius: 10px;
+  padding: 8px 11px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.seg-btn.active { border-color: var(--blue); background: var(--blue-soft); color: #1749ae; font-weight: 800; }
+
+.c-move-mode {
+  min-width: 300px;
+  max-width: 380px;
+  min-height: 54px;
+  padding: 8px 10px 8px 12px;
+  border: 1px solid #c8d8ff;
+  background: #f2f6ff;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.c-move-copy { min-width: 0; flex: 1; display: grid; gap: 2px; }
+.c-move-copy .label { margin: 0 0 2px; color: #4267b2; font-size: 8px; }
+.c-move-copy strong { font-size: 11px; color: #1e3158; line-height: 1.2; }
+.c-move-copy span { font-size: 9px; color: #65728a; line-height: 1.25; }
+.switch { flex: 0 0 auto; cursor: pointer; }
+.switch input { position: absolute; opacity: 0; pointer-events: none; }
+.switch-track {
+  display: block;
+  width: 44px;
+  height: 25px;
+  padding: 3px;
+  border-radius: 999px;
+  background: #b9c1cc;
+  transition: background .18s ease;
+}
+.switch-thumb {
+  display: block;
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 2px 6px rgba(20,30,45,.22);
+  transition: transform .18s ease;
+}
+.switch input:checked + .switch-track { background: var(--blue); }
+.switch input:checked + .switch-track .switch-thumb { transform: translateX(19px); }
+.run-btn { white-space: nowrap; }
+
+.scenario-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 520px);
+  gap: 18px;
+  align-items: center;
+  padding: 15px 24px;
+  background: #fafbfc;
+  border-bottom: 1px solid var(--line);
+}
+.eyebrow { color: var(--blue); font-size: 11px; font-weight: 900; }
+.scenario-summary h2 { margin: 3px 0 4px; font-size: 19px; }
+.scenario-summary p { margin: 0; color: var(--muted); font-size: 12px; }
+.status {
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 12px;
+  border: 1px solid var(--line);
+  background: white;
+  color: var(--muted);
+}
+.status.success { background: #e9f8f0; color: #14613f; border-color: #bfe6d0; }
+.status.error { background: #ffeded; color: #942f2f; border-color: #f0baba; }
+.status.preview { background: #eef4ff; color: #1f4eaa; border-color: #c7d8ff; }
+
+.prototype-area { padding: 18px 22px 34px; }
+.ivi-shell {
+  width: min(1180px, 100%);
+  aspect-ratio: 1640 / 900;
+  margin: 0 auto;
+  background: #000;
+  border-radius: 30px;
+  padding: 9px 9px 34px;
+  position: relative;
+  box-shadow: var(--shadow);
+  overflow: visible;
+}
+.ivi-inner {
+  height: 100%;
+  background: #d7dae0;
+  border-radius: 26px;
+  display: grid;
+  grid-template-rows: 25px minmax(0, 1fr) 50px;
+  overflow: hidden;
+}
+.status-label, .gnb-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 800;
+}
+.status-label { font-size: clamp(9px, 1vw, 14px); letter-spacing: .02em; }
+.gnb-label { font-size: clamp(14px, 1.6vw, 22px); }
+.pnp-label {
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: white;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: .03em;
+}
+.ivi-content {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(260px, 1.08fr);
+  gap: 18px;
+  padding: 0 22px;
+}
+.app-canvas {
+  min-height: 0;
+  background: #c5c8cf;
+  border-radius: 30px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.22);
+}
+.app-placeholder {
+  position: absolute;
+  inset: 24px;
+  border: 1px dashed rgba(255,255,255,.35);
+  border-radius: 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: rgba(255,255,255,.58);
+  pointer-events: none;
+}
+.app-title { font-size: clamp(28px, 4vw, 54px); font-weight: 900; letter-spacing: .04em; }
+.app-subtitle { margin-top: 8px; font-size: 12px; }
+
+.new-widget-tray {
+  position: absolute;
+  left: 24px;
+  bottom: 24px;
+  width: min(620px, calc(100% - 48px));
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(245,247,250,.92);
+  box-shadow: 0 12px 32px rgba(0,0,0,.12);
+  backdrop-filter: blur(10px);
+}
+.tray-title { font-size: 10px; letter-spacing: .08em; font-weight: 900; color: #6e7480; margin-bottom: 10px; }
+.tray-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: end; }
+.palette-card {
+  border-radius: 15px;
+  padding: 13px 14px;
+  color: rgba(24,24,26,.86);
+  cursor: grab;
+  user-select: none;
+  border: 2px solid rgba(255,255,255,.65);
+  box-shadow: 0 6px 14px rgba(30,35,45,.12);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform .16s ease, box-shadow .16s ease;
+  touch-action: none;
+}
+.palette-card:hover { transform: translateY(-2px); box-shadow: 0 10px 18px rgba(30,35,45,.16); }
+.palette-card.size-1 { min-height: 90px; }
+.palette-card.size-2 { min-height: 150px; }
+.palette-card strong { font-size: 14px; }
+.palette-card span { font-size: 10px; opacity: .58; }
+.tray-help { margin-top: 9px; color: #727986; font-size: 10px; line-height: 1.35; }
+
+.widget-rail-wrap {
+  background: #d8dce4;
+  border-radius: 30px;
+  min-height: 0;
+  padding: 14px 16px 16px;
+  position: relative;
+  display: grid;
+  grid-template-rows: 34px minmax(0, 1fr) 24px;
+  gap: 8px;
+}
+.rail-head { display: flex; justify-content: space-between; align-items: center; padding: 0 3px; color: #555d69; font-weight: 900; font-size: 12px; }
+.rail-nav { width: 28px; height: 28px; border: 0; border-radius: 50%; background: rgba(255,255,255,.7); cursor: pointer; color: #444c58; }
+.page-dots { display: flex; justify-content: center; align-items: center; gap: 5px; }
+.page-dot { width: 6px; height: 6px; border-radius: 50%; background: #a9b0bb; border: 0; padding: 0; cursor: pointer; }
+.page-dot.active { width: 16px; border-radius: 8px; background: #5a6574; }
+.rail-scrollbar { position: absolute; left: -12px; top: 42%; width: 5px; height: 92px; background: rgba(255,255,255,.22); border-radius: 8px; }
+.rail-scrollbar i { display:block; height: 55%; width:100%; background: rgba(255,255,255,.82); border-radius: 8px; }
+
+.page-surface {
+  position: relative;
+  border-radius: 18px;
+  touch-action: none;
+}
+.rail-surface {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.surface-row {
+  border-radius: 18px;
+  background: rgba(255,255,255,.25);
+  border: 1px dashed rgba(255,255,255,.35);
+}
+.surface-row span { display: none; }
+
+.widget-card {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-radius: 18px;
+  padding: 12px 14px;
+  color: #24262a;
+  border: 1px solid rgba(80,65,45,.08);
+  box-shadow: 0 6px 14px rgba(25,30,40,.11);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  user-select: none;
+  cursor: grab;
+  touch-action: none;
+  overflow: hidden;
+  transition: top .22s cubic-bezier(.2,.8,.2,1), height .22s cubic-bezier(.2,.8,.2,1), transform .18s ease, opacity .18s ease, box-shadow .18s ease;
+  z-index: 3;
+}
+.widget-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(145deg, rgba(255,255,255,.25), rgba(255,255,255,0));
+  pointer-events: none;
+}
+.widget-card:hover { box-shadow: 0 10px 20px rgba(25,30,40,.16); }
+.widget-card.drag-preview { outline: 3px solid rgba(48,108,244,.35); outline-offset: -3px; }
+.widget-card .card-title { font-size: 14px; font-weight: 900; position: relative; z-index: 1; }
+.widget-card .card-meta { font-size: 10px; color: rgba(20,22,25,.54); position: relative; z-index: 1; }
+.widget-delete {
+  position: absolute;
+  top: 7px;
+  right: 8px;
+  z-index: 4;
+  width: 25px;
+  height: 25px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255,255,255,.78);
+  color: #555c66;
+  cursor: pointer;
+  font-weight: 900;
+  box-shadow: 0 2px 6px rgba(0,0,0,.08);
+}
+.widget-card.removing { opacity: 0; transform: scale(.88); }
+
+.page-surface.target-ok { outline: 3px solid rgba(48,108,244,.48); outline-offset: 4px; }
+.page-surface.target-bad { outline: 3px solid rgba(223,76,76,.55); outline-offset: 4px; }
+.drop-marker {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  height: 5px;
+  border-radius: 6px;
+  background: var(--blue);
+  box-shadow: 0 0 0 4px rgba(48,108,244,.13);
+  pointer-events: none;
+  z-index: 8;
+}
+.target-bad .drop-marker { background: var(--danger); box-shadow: 0 0 0 4px rgba(223,76,76,.12); }
+
+.overview-section {
+  width: min(1400px, 100%);
+  margin: 22px auto 0;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 0 8px 22px rgba(20,25,35,.05);
+}
+.overview-head { display: flex; justify-content: space-between; gap: 20px; align-items: end; margin-bottom: 12px; }
+.overview-head h3 { margin: 0; font-size: 16px; }
+.overview-note { max-width: 610px; color: var(--muted); font-size: 11px; text-align: right; }
+.page-overview { display: flex; gap: 12px; overflow-x: auto; padding: 6px 4px 12px; min-height: 230px; }
+.mini-page { min-width: 154px; width: 154px; background: #eef2f8; border: 1px solid #d9e0ea; border-radius: 18px; padding: 9px; cursor: pointer; transition: border-color .16s ease, transform .16s ease; }
+.mini-page:hover { transform: translateY(-1px); }
+.mini-page.active { border-color: var(--blue); box-shadow: 0 0 0 2px rgba(48,108,244,.12); }
+.mini-page.spill { border-style: dashed; border-color: #6e92e8; }
+.mini-page-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 10px; font-weight: 900; color: #66707e; }
+.spill-badge { font-size: 8px; background: white; border: 1px solid #c8d7f4; color: #2d62c6; border-radius: 7px; padding: 3px 5px; }
+.mini-surface { height: calc(var(--mini-row-h) * 3 + var(--mini-row-gap) * 2); display: grid; grid-template-rows: repeat(3, var(--mini-row-h)); gap: var(--mini-row-gap); }
+.mini-surface .surface-row { border-radius: 11px; background: rgba(255,255,255,.55); border-color: #d7dee8; }
+.mini-surface .widget-card { border-radius: 11px; padding: 8px 9px; }
+.mini-surface .widget-card .card-title { font-size: 11px; }
+.mini-surface .widget-card .card-meta { font-size: 8px; }
+.mini-surface .widget-delete { width: 19px; height: 19px; top: 4px; right: 4px; font-size: 10px; }
+.mini-surface .drop-marker { left: 5px; right: 5px; height: 3px; }
+
+.rule-foot { width: min(1400px, 100%); margin: 14px auto 0; display: grid; grid-template-columns: 1.2fr 1fr; gap: 12px; }
+.rule-card { background: white; border: 1px solid var(--line); border-radius: 14px; padding: 13px 15px; }
+.rule-card strong { display:block; font-size: 13px; margin-bottom: 5px; }
+.rule-card p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
+
+.btn { border: 0; border-radius: 10px; padding: 8px 11px; font-weight: 800; cursor: pointer; }
+.btn.primary { background: var(--blue); color: white; }
+.btn.secondary { background: #e8ebf0; color: #303741; }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+
+.drag-ghost {
+  position: fixed;
+  width: 170px;
+  border-radius: 16px;
+  padding: 12px;
+  pointer-events: none;
+  z-index: 9999;
+  box-shadow: 0 18px 42px rgba(0,0,0,.24);
+  border: 2px solid rgba(255,255,255,.75);
+  transform: translate(-50%, -50%) rotate(2deg);
+  opacity: .96;
+}
+.drag-ghost.size-1 { height: 74px; }
+.drag-ghost.size-2 { height: 126px; }
+.drag-ghost strong { display:block; font-size: 13px; }
+.drag-ghost span { font-size: 10px; opacity: .55; }
+.hidden { display:none !important; }
+
+@media (max-width: 980px) {
+  .control-panel, .scenario-summary { grid-template-columns: 1fr; display: grid; align-items: start; }
+  .control-block { min-width: 0; }
+  .ivi-content { grid-template-columns: 1.8fr 1fr; gap: 12px; padding: 0 14px; }
+  .new-widget-tray { left: 14px; bottom: 14px; width: calc(100% - 28px); }
+  .rule-foot { grid-template-columns: 1fr; }
+}
+
+</style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <h1>IVI Widget Layout Prototype</h1>
+        <p>3-row widget rail / 1x1 + 1x2 / A-B-C rule comparison</p>
+      </div>
+      <div class="top-actions">
+        <button id="undoBtn" class="btn secondary">Undo</button>
+        <button id="resetBtn" class="btn secondary">Reset</button>
+        <button id="doneBtn" class="btn secondary">Done / cleanup empty pages</button>
+      </div>
+    </header>
+
+    <section class="control-panel">
+      <div class="control-block">
+        <div class="label">Layout rule</div>
+        <div id="optionTabs" class="segmented"></div>
+      </div>
+      <div class="control-block grow">
+        <div class="label">Scenario</div>
+        <div id="scenarioTabs" class="segmented scenarios"></div>
+      </div>
+      <div id="cMoveMode" class="c-move-mode hidden" aria-live="polite">
+        <div class="c-move-copy">
+          <div class="label">C exception / existing cross-page move only</div>
+          <strong>Push through existing pages</strong>
+          <span>OFF = create Spill Page · ON = global push/pull, no Spill Page</span>
+        </div>
+        <label class="switch" title="Only affects moving an existing widget to a different page in Option C">
+          <input id="cMovePushToggle" type="checkbox" />
+          <span class="switch-track"><span class="switch-thumb"></span></span>
+        </label>
+      </div>
+      <button id="runScenarioBtn" class="btn primary run-btn">Run scenario action</button>
+    </section>
+
+    <section class="scenario-summary">
+      <div>
+        <span id="scenarioNumber" class="eyebrow"></span>
+        <h2 id="scenarioTitle"></h2>
+        <p id="scenarioDescription"></p>
+      </div>
+      <div id="statusBar" class="status neutral">Drag a NEW card or an existing widget. Hover over a page to preview the push/reflow.</div>
+    </section>
+
+    <main class="prototype-area">
+      <section class="ivi-shell" aria-label="Interactive IVI prototype">
+        <div class="ivi-inner">
+          <div class="status-label">Status Bar</div>
+          <div class="ivi-content">
+            <section class="app-canvas">
+              <div class="app-placeholder">
+                <div class="app-title">APP AREA</div>
+                <div class="app-subtitle">Drag a new widget from this tray into the widget rail.</div>
+              </div>
+
+              <div class="new-widget-tray">
+                <div class="tray-title">NEW WIDGETS</div>
+                <div class="tray-cards">
+                  <div id="palette1" class="palette-card size-1" data-size="1">
+                    <strong>NEW 1x1</strong>
+                    <span>drag me</span>
+                  </div>
+                  <div id="palette2" class="palette-card size-2" data-size="2">
+                    <strong>NEW 1x2</strong>
+                    <span>drag me</span>
+                  </div>
+                </div>
+                <div class="tray-help">Hover while holding the pointer to preview the final layout. Drop outside to cancel and restore.</div>
+              </div>
+            </section>
+
+            <aside class="widget-rail-wrap">
+              <div class="rail-head">
+                <button id="prevPageBtn" class="rail-nav" aria-label="Previous page">&#8249;</button>
+                <span id="currentPageLabel">P1</span>
+                <button id="nextPageBtn" class="rail-nav" aria-label="Next page">&#8250;</button>
+              </div>
+              <div id="mainRail" class="page-surface rail-surface" data-context="rail"></div>
+              <div id="pageDots" class="page-dots"></div>
+              <div class="rail-scrollbar"><i></i></div>
+            </aside>
+          </div>
+          <div class="gnb-label">GNB</div>
+        </div>
+        <div class="pnp-label">PNP</div>
+      </section>
+
+      <section class="overview-section">
+        <div class="overview-head">
+          <div>
+            <div class="label">Page overview</div>
+            <h3>All widget pages</h3>
+          </div>
+          <div class="overview-note">Existing pages keep their internal grouping in C. Click a page to show it in the IVI rail.</div>
+        </div>
+        <div id="pageOverview" class="page-overview"></div>
+      </section>
+
+      <section class="rule-foot">
+        <div class="rule-card">
+          <div class="label">Current rule</div>
+          <strong id="ruleName"></strong>
+          <p id="ruleDescription"></p>
+        </div>
+        <div class="rule-card compact">
+          <div class="label">Interaction</div>
+          <p><b>Delete</b> removes the selected widget and animates the resulting reflow. <b>Undo</b> restores the entire previous layout transaction.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="dragGhost" class="drag-ghost hidden"></div>
+  <script>
+(() => {
+  const CAPACITY = 3;
+
+  const OPTIONS = {
+    A: {
+      name: 'A. Free Placement',
+      short: 'Free Placement',
+      description: 'No cross-page push/pull. A drop is allowed when the target page has enough total row capacity. A 1x2 may shove an existing 1x1 up or down inside that same page to create two contiguous rows.'
+    },
+    B: {
+      name: 'B. Global Auto-compaction',
+      short: 'Global Auto-compaction',
+      description: 'All widgets share one global order. Add, delete, or move changes that order, then every page is repaginated from the front.'
+    },
+    C: {
+      name: 'C. Page-local + Spill',
+      short: 'Page-local + Spill',
+      description: 'Default: only the directly edited page reflows and overflow goes to a new spill page. Optional C-only exception: existing cross-page moves can push/pull globally without creating a spill page.'
+    }
+  };
+
+  const SCENARIOS = {
+    1: {
+      title: 'Full P1 + add 1x2',
+      description: 'Five pages are already configured. Add X(1x2) after A in the full first page.',
+      pages: [
+        [['A',1],['B',1],['C',1]],
+        [['D',2],['E',1]],
+        [['F',1],['G',2]],
+        [['H',2],['I',1]],
+        [['J',1],['K',1],['L',1]]
+      ],
+      action: { type:'add', size:2, id:'X', page:0, after:'A' }
+    },
+    2: {
+      title: 'Cross-page move into a full target',
+      description: 'Move I(1x1) from P4 into the full P1, between A and B.',
+      pages: [
+        [['A',1],['B',1],['C',1]],
+        [['D',2],['E',1]],
+        [['F',1],['G',2]],
+        [['H',1],['I',1],['J',1]],
+        [['K',2],['L',1]]
+      ],
+      action: { type:'move', id:'I', page:0, after:'A' }
+    },
+    3: {
+      title: 'One empty row + add 1x2 between cards',
+      description: 'P1 visibly has one empty row, but inserting a 1x2 between A and B needs four total rows.',
+      pages: [
+        [['A',1],['B',1]],
+        [['C',2],['D',1]],
+        [['E',1],['F',2]],
+        [['G',1],['H',1]],
+        [['I',2],['J',1]]
+      ],
+      action: { type:'add', size:2, id:'X', page:0, after:'A' }
+    },
+    4: {
+      title: 'Delete a front-page 1x2',
+      description: 'Delete A(1x2) from the first page and compare how far the resulting pull/reflow propagates.',
+      pages: [
+        [['A',2],['B',1]],
+        [['C',1],['D',1],['E',1]],
+        [['F',2],['G',1]],
+        [['H',1],['I',2]],
+        [['J',1],['K',1],['L',1]]
+      ],
+      action: { type:'delete', id:'A' }
+    }
+  };
+
+  const BASE_COLORS = [
+    ['#d7e4f5','#bfcfe3'], ['#f1d8d4','#ddb9b4'], ['#dce8d2','#bfd1b1'],
+    ['#d9d3e8','#bfb6d8'], ['#e7dfcf','#d1c3a9'], ['#cfe2e1','#b4d1cf'],
+    ['#e4d4df','#d0b8c7'], ['#d6dde8','#bec8d7'], ['#e8dacb','#d4c0aa'],
+    ['#d2e0d7','#bad0c2'], ['#d9d8eb','#c0bfdc'], ['#e7d8d0','#d3bdb2']
+  ];
+
+  const app = {
+    option: 'C',
+    scenario: 1,
+    states: {},
+    histories: {},
+    selectedPageId: {},
+    newCounter: 1,
+    drag: null,
+    preview: null,
+    lastHoverKey: null,
+    deleteTimer: null,
+    cExistingMoveGlobal: false
+  };
+
+  const els = {
+    optionTabs: document.getElementById('optionTabs'),
+    scenarioTabs: document.getElementById('scenarioTabs'),
+    cMoveMode: document.getElementById('cMoveMode'),
+    cMovePushToggle: document.getElementById('cMovePushToggle'),
+    scenarioNumber: document.getElementById('scenarioNumber'),
+    scenarioTitle: document.getElementById('scenarioTitle'),
+    scenarioDescription: document.getElementById('scenarioDescription'),
+    ruleName: document.getElementById('ruleName'),
+    ruleDescription: document.getElementById('ruleDescription'),
+    statusBar: document.getElementById('statusBar'),
+    mainRail: document.getElementById('mainRail'),
+    pageOverview: document.getElementById('pageOverview'),
+    currentPageLabel: document.getElementById('currentPageLabel'),
+    pageDots: document.getElementById('pageDots'),
+    prevPageBtn: document.getElementById('prevPageBtn'),
+    nextPageBtn: document.getElementById('nextPageBtn'),
+    undoBtn: document.getElementById('undoBtn'),
+    resetBtn: document.getElementById('resetBtn'),
+    doneBtn: document.getElementById('doneBtn'),
+    runScenarioBtn: document.getElementById('runScenarioBtn'),
+    palette1: document.getElementById('palette1'),
+    palette2: document.getElementById('palette2'),
+    dragGhost: document.getElementById('dragGhost')
+  };
+
+  function key(option = app.option, scenario = app.scenario) { return `${option}-${scenario}`; }
+  function clone(value) { return JSON.parse(JSON.stringify(value)); }
+  function makePageId(prefix='p') { return `${prefix}-${Math.random().toString(36).slice(2,8)}`; }
+  function pageUsed(items, widgets) { return items.reduce((n,id) => n + (widgets[id]?.size || 0), 0); }
+
+  function newGradient(index) {
+    const hue = (18 + (index - 1) * 34) % 360;
+    const hue2 = (hue + 28) % 360;
+    return [`hsl(${hue} 78% 70%)`, `hsl(${hue2} 76% 62%)`];
+  }
+
+  function baseGradient(index) {
+    return BASE_COLORS[index % BASE_COLORS.length];
+  }
+
+  function widgetBackground(widget) {
+    const colors = widget.colors || ['#d6dde8','#bcc8d8'];
+    return `linear-gradient(145deg, ${colors[0]}, ${colors[1]})`;
+  }
+
+  function buildWidgets(sc) {
+    const widgets = {};
+    let i = 0;
+    sc.pages.flat().forEach(([id,size]) => {
+      widgets[id] = { id, label:id, size, colors:baseGradient(i++), isNew:false };
+    });
+    return widgets;
+  }
+
+  function packGlobal(order, widgets, oldPages=[]) {
+    const pageOrders = [];
+    let current = [];
+    let used = 0;
+    for (const id of order) {
+      const size = widgets[id]?.size || 1;
+      if (current.length && used + size > CAPACITY) {
+        pageOrders.push(current);
+        current = [];
+        used = 0;
+      }
+      current.push(id);
+      used += size;
+    }
+    if (current.length || !pageOrders.length) pageOrders.push(current);
+    return pageOrders.map((items,i) => ({
+      id: oldPages[i]?.id || makePageId(`b${i+1}`),
+      items,
+      spill:false
+    }));
+  }
+
+  function sequentialPlacements(items, widgets) {
+    let row = 0;
+    return items.map(id => {
+      const size = widgets[id]?.size || 1;
+      const placement = { id, start:row, size };
+      row += size;
+      return placement;
+    });
+  }
+
+  function buildInitialState(option, scenarioId) {
+    const sc = SCENARIOS[scenarioId];
+    const widgets = buildWidgets(sc);
+    if (option === 'A') {
+      return {
+        option,
+        widgets,
+        pages: sc.pages.map((items,i) => ({
+          id: makePageId(`a${i+1}`),
+          spill:false,
+          placements: sequentialPlacements(items.map(([id]) => id), widgets)
+        }))
+      };
+    }
+    if (option === 'B') {
+      const order = sc.pages.flat().map(([id]) => id);
+      return { option, widgets, order, pages:packGlobal(order, widgets) };
+    }
+    return {
+      option,
+      widgets,
+      pages: sc.pages.map((items,i) => ({ id:makePageId(`c${i+1}`), spill:false, items:items.map(([id]) => id) }))
+    };
+  }
+
+  function getState() {
+    const k = key();
+    if (!app.states[k]) app.states[k] = buildInitialState(app.option, app.scenario);
+    if (!app.histories[k]) app.histories[k] = [];
+    return app.states[k];
+  }
+
+  function setState(state) { app.states[key()] = state; }
+
+  function getDisplayState() { return app.preview?.state || getState(); }
+
+  function pageItems(state, page) {
+    if (state.option === 'A') return [...page.placements].sort((a,b)=>a.start-b.start).map(p=>p.id);
+    return page.items || [];
+  }
+
+  function pagePlacements(state, page) {
+    if (state.option === 'A') return [...page.placements].sort((a,b)=>a.start-b.start);
+    return sequentialPlacements(page.items || [], state.widgets);
+  }
+
+  function selectedPageId() {
+    const k = key();
+    const state = getDisplayState();
+    const current = app.selectedPageId[k];
+    if (state.pages.some(p=>p.id===current)) return current;
+    const first = state.pages[0]?.id || null;
+    app.selectedPageId[k] = first;
+    return first;
+  }
+
+  function setSelectedPage(id) { app.selectedPageId[key()] = id; render(); }
+
+  function findWidget(state, id) {
+    if (!state.widgets[id]) return null;
+    if (state.option === 'A') {
+      for (let pi=0; pi<state.pages.length; pi++) {
+        const idx = state.pages[pi].placements.findIndex(p=>p.id===id);
+        if (idx >= 0) return { pageIndex:pi, pageId:state.pages[pi].id, localIndex:idx };
+      }
+      return null;
+    }
+    for (let pi=0; pi<state.pages.length; pi++) {
+      const idx = (state.pages[pi].items || []).indexOf(id);
+      if (idx >= 0) return { pageIndex:pi, pageId:state.pages[pi].id, localIndex:idx };
+    }
+    return null;
+  }
+
+  function getGlobalPageStart(state, pageId) {
+    let count = 0;
+    for (const page of state.pages) {
+      if (page.id === pageId) return count;
+      count += page.items.length;
+    }
+    return count;
+  }
+
+  function packPrefix(items, widgets) {
+    const kept = [];
+    let used = 0;
+    let index = 0;
+    for (; index < items.length; index++) {
+      const id = items[index];
+      const size = widgets[id]?.size || 1;
+      if (used + size > CAPACITY) break;
+      kept.push(id);
+      used += size;
+    }
+    return { kept, spill:items.slice(index) };
+  }
+
+  function flattenCOrder(state) {
+    return state.pages.flatMap(page => page.items || []);
+  }
+
+  function repaginateCGloballyForExistingMove(state, widget, source, targetPageId, insertIndex) {
+    if (source) {
+      state.pages[source.pageIndex].items = state.pages[source.pageIndex].items.filter(id => id !== widget.id);
+    }
+    const targetIndex = state.pages.findIndex(p => p.id === targetPageId);
+    if (targetIndex < 0) return { ok:false, state, message:'Target page not found.' };
+
+    const target = state.pages[targetIndex];
+    const safeIndex = Math.max(0, Math.min(insertIndex, target.items.length));
+    let globalIndex = safeIndex;
+    for (let i = 0; i < targetIndex; i++) globalIndex += state.pages[i].items.length;
+
+    const order = flattenCOrder(state);
+    globalIndex = Math.max(0, Math.min(globalIndex, order.length));
+    order.splice(globalIndex, 0, widget.id);
+
+    state.pages = packGlobal(order, state.widgets, state.pages).map(page => ({
+      id: page.id,
+      items: page.items,
+      spill: false
+    }));
+    return {
+      ok:true,
+      state,
+      message:`C exception ON: existing cross-page move pushed/pulled widgets through ${state.pages.length} pages. No spill page was created.`
+    };
+  }
+
+  function previewTransaction(baseState, drag, targetPageId, insertIndex) {
+    const state = clone(baseState);
+    const widget = drag.widget;
+    state.widgets[widget.id] = clone(widget);
+
+    if (state.option === 'A') {
+      let source = drag.type === 'existing' ? findWidget(state, widget.id) : null;
+      if (source) {
+        state.pages[source.pageIndex].placements = state.pages[source.pageIndex].placements.filter(p=>p.id!==widget.id);
+      }
+      const targetPage = state.pages.find(p=>p.id===targetPageId);
+      if (!targetPage) return { ok:false, state:baseState, message:'Target page not found.' };
+      const targetItems = [...targetPage.placements].sort((a,b)=>a.start-b.start).map(p=>p.id);
+      const safeIndex = Math.max(0, Math.min(insertIndex, targetItems.length));
+      const nextItems = targetItems.slice();
+      nextItems.splice(safeIndex,0,widget.id);
+      const used = pageUsed(nextItems, state.widgets);
+      if (used > CAPACITY) {
+        return { ok:false, state:baseState, message:`A: target page needs ${used} rows. No cross-page overflow is allowed.` };
+      }
+      targetPage.placements = sequentialPlacements(nextItems, state.widgets);
+      return { ok:true, state, message:'A: local shove/reorder only inside the target page. No other page changes.' };
+    }
+
+    if (state.option === 'B') {
+      let globalIndex = getGlobalPageStart(baseState, targetPageId) + insertIndex;
+      if (drag.type === 'existing') {
+        const sourceIndex = state.order.indexOf(widget.id);
+        if (sourceIndex >= 0) {
+          state.order.splice(sourceIndex,1);
+          if (sourceIndex < globalIndex) globalIndex -= 1;
+        }
+      }
+      globalIndex = Math.max(0, Math.min(globalIndex, state.order.length));
+      state.order.splice(globalIndex,0,widget.id);
+      state.pages = packGlobal(state.order, state.widgets, state.pages);
+      return { ok:true, state, message:`B: global order changed. All ${state.pages.length} pages are repaginated.` };
+    }
+
+    const cSource = drag.type === 'existing' ? findWidget(state, widget.id) : null;
+    const isCrossPageExistingMove = !!(cSource && cSource.pageId !== targetPageId);
+    if (drag.type === 'existing' && app.cExistingMoveGlobal && isCrossPageExistingMove) {
+      return repaginateCGloballyForExistingMove(state, widget, cSource, targetPageId, insertIndex);
+    }
+
+    if (cSource) {
+      state.pages[cSource.pageIndex].items = state.pages[cSource.pageIndex].items.filter(id=>id!==widget.id);
+    }
+    const targetIndex = state.pages.findIndex(p=>p.id===targetPageId);
+    if (targetIndex < 0) return { ok:false, state:baseState, message:'Target page not found.' };
+    const target = state.pages[targetIndex];
+    const safeIndex = Math.max(0, Math.min(insertIndex, target.items.length));
+    const nextItems = target.items.slice();
+    nextItems.splice(safeIndex,0,widget.id);
+    const packed = packPrefix(nextItems, state.widgets);
+    target.items = packed.kept;
+    if (packed.spill.length) {
+      state.pages.splice(targetIndex + 1, 0, { id:makePageId('spill'), items:packed.spill, spill:true });
+      return { ok:true, state, message:`C: target page reflowed. ${packed.spill.join(', ')} moved to a new spill page; later pages stay grouped.` };
+    }
+    return { ok:true, state, message:'C: target page reflowed locally. Existing later pages stay unchanged.' };
+  }
+
+  function deleteFromState(baseState, id) {
+    const state = clone(baseState);
+    const found = findWidget(state,id);
+    if (!found) return {ok:false,state:baseState,message:'Widget not found.'};
+    if (state.option === 'A') {
+      state.pages[found.pageIndex].placements = state.pages[found.pageIndex].placements.filter(p=>p.id!==id);
+    } else if (state.option === 'B') {
+      state.order = state.order.filter(x=>x!==id);
+      state.pages = packGlobal(state.order, state.widgets, state.pages);
+    } else {
+      state.pages[found.pageIndex].items = state.pages[found.pageIndex].items.filter(x=>x!==id);
+    }
+    delete state.widgets[id];
+    const messages = {
+      A: 'A: only that slot becomes empty. Other pages do not move.',
+      B: `B: the global order pulls forward and repaginates ${state.pages.length} pages.`,
+      C: 'C: only that page reflows upward. No widget is pulled from another page.'
+    };
+    return {ok:true,state,message:messages[state.option]};
+  }
+
+  function snapshotCurrent() {
+    const hist = app.histories[key()] || (app.histories[key()] = []);
+    hist.push(clone(getState()));
+    if (hist.length > 40) hist.shift();
+  }
+
+  function setStatus(message, type='neutral') {
+    els.statusBar.textContent = message;
+    els.statusBar.className = `status ${type}`;
+  }
+
+  function captureRects() {
+    const map = new Map();
+    document.querySelectorAll('[data-anim-key]').forEach(el => {
+      if (!el.classList.contains('removing')) map.set(el.dataset.animKey, el.getBoundingClientRect());
+    });
+    return map;
+  }
+
+  function animateFromRects(oldRects) {
+    requestAnimationFrame(() => {
+      document.querySelectorAll('[data-anim-key]').forEach(el => {
+        const old = oldRects.get(el.dataset.animKey);
+        if (!old) {
+          el.animate([
+            { opacity:0, transform:'scale(.9)' },
+            { opacity:1, transform:'scale(1)' }
+          ], { duration:220, easing:'cubic-bezier(.2,.8,.2,1)' });
+          return;
+        }
+        const next = el.getBoundingClientRect();
+        const dx = old.left - next.left;
+        const dy = old.top - next.top;
+        const sx = old.width && next.width ? old.width / next.width : 1;
+        const sy = old.height && next.height ? old.height / next.height : 1;
+        if (Math.abs(dx) > .5 || Math.abs(dy) > .5 || Math.abs(sx-1) > .01 || Math.abs(sy-1) > .01) {
+          el.animate([
+            { transform:`translate(${dx}px, ${dy}px) scale(${sx}, ${sy})` },
+            { transform:'translate(0,0) scale(1,1)' }
+          ], { duration:260, easing:'cubic-bezier(.2,.8,.2,1)' });
+        }
+      });
+    });
+  }
+
+  function renderAnimated(oldRects = null) {
+    const rects = oldRects || captureRects();
+    render();
+    animateFromRects(rects);
+  }
+
+  function commitPreview(preview) {
+    if (!preview?.ok) return;
+    const oldRects = captureRects();
+    snapshotCurrent();
+    setState(preview.state);
+    app.preview = null;
+    if (app.drag?.type === 'new') app.newCounter += 1;
+    const targetId = app.drag?.targetPageId;
+    if (targetId) app.selectedPageId[key()] = targetId;
+    setStatus(preview.message, 'success');
+    app.drag = null;
+    app.lastHoverKey = null;
+    hideGhost();
+    render();
+    animateFromRects(oldRects);
+  }
+
+  function startDragFromPalette(size, ev) {
+    if (ev.button !== 0) return;
+    ev.preventDefault();
+    const idx = app.newCounter;
+    const id = `N${idx}`;
+    const colors = newGradient(idx);
+    const widget = { id, label:id, size, colors, isNew:true };
+    beginDrag({ type:'new', widget }, ev);
+  }
+
+  function startDragExisting(id, ev) {
+    if (ev.button !== 0 || ev.target.closest('.widget-delete')) return;
+    ev.preventDefault();
+    const state = getState();
+    const widget = state.widgets[id];
+    if (!widget) return;
+    beginDrag({ type:'existing', widget:clone(widget) }, ev);
+  }
+
+  function beginDrag(dragInfo, ev) {
+    app.preview = null;
+    app.lastHoverKey = null;
+    app.drag = {
+      ...dragInfo,
+      baseState: clone(getState()),
+      pointerId: ev.pointerId,
+      targetPageId: null,
+      insertIndex: null,
+      markerRatio: .5,
+      valid:false
+    };
+    showGhost(dragInfo.widget, ev.clientX, ev.clientY);
+    window.addEventListener('pointermove', onPointerMove, true);
+    window.addEventListener('pointerup', onPointerUp, true);
+    window.addEventListener('pointercancel', onPointerCancel, true);
+    setStatus('Dragging: hover over a widget page to preview the final result.', 'preview');
+    render();
+  }
+
+  function showGhost(widget, x, y) {
+    els.dragGhost.className = `drag-ghost size-${widget.size}`;
+    els.dragGhost.style.background = widgetBackground(widget);
+    els.dragGhost.innerHTML = `<strong>${widget.label}</strong><span>${widget.size===2?'1x2 / 2 rows':'1x1 / 1 row'}</span>`;
+    moveGhost(x,y);
+  }
+
+  function moveGhost(x,y) {
+    els.dragGhost.style.left = `${x}px`;
+    els.dragGhost.style.top = `${y}px`;
+  }
+
+  function hideGhost() { els.dragGhost.classList.add('hidden'); }
+
+  function pageLayoutForHitTest(baseState, pageId, draggedId) {
+    const state = clone(baseState);
+    if (draggedId && state.widgets[draggedId]) {
+      const found = findWidget(state,draggedId);
+      if (found) {
+        if (state.option === 'A') state.pages[found.pageIndex].placements = state.pages[found.pageIndex].placements.filter(p=>p.id!==draggedId);
+        else if (state.option === 'C') state.pages[found.pageIndex].items = state.pages[found.pageIndex].items.filter(id=>id!==draggedId);
+      }
+    }
+    const page = state.pages.find(p=>p.id===pageId);
+    if (!page) return [];
+    if (state.option === 'B') return pagePlacements(baseState, baseState.pages.find(p=>p.id===pageId));
+    return pagePlacements(state,page);
+  }
+
+  function insertionIndexFromPointer(baseState, pageId, surface, clientY, draggedId) {
+    const rect = surface.getBoundingClientRect();
+    const y = Math.max(0, Math.min(clientY - rect.top, rect.height));
+    const layout = pageLayoutForHitTest(baseState,pageId,draggedId);
+    if (!layout.length) return { index:0, ratio:y/rect.height };
+    const rowScale = rect.height / CAPACITY;
+    for (let i=0; i<layout.length; i++) {
+      const mid = (layout[i].start + layout[i].size/2) * rowScale;
+      if (y < mid) return { index:i, ratio:y/rect.height };
+    }
+    return { index:layout.length, ratio:y/rect.height };
+  }
+
+  function onPointerMove(ev) {
+    if (!app.drag) return;
+    moveGhost(ev.clientX, ev.clientY);
+    const element = document.elementFromPoint(ev.clientX, ev.clientY);
+    const surface = element?.closest?.('.page-surface');
+    if (!surface || !surface.dataset.pageId) {
+      if (app.preview) {
+        const oldRects = captureRects();
+        app.preview = null;
+        app.drag.targetPageId = null;
+        app.drag.valid = false;
+        app.lastHoverKey = null;
+        render();
+        animateFromRects(oldRects);
+        setStatus('Outside a page: release here to cancel. Layout restored.', 'preview');
+      }
+      return;
+    }
+
+    const pageId = surface.dataset.pageId;
+    const hit = insertionIndexFromPointer(app.drag.baseState, pageId, surface, ev.clientY, app.drag.type==='existing' ? app.drag.widget.id : null);
+    const hoverKey = `${pageId}:${hit.index}`;
+    app.drag.markerRatio = hit.ratio;
+    if (hoverKey === app.lastHoverKey) return;
+    app.lastHoverKey = hoverKey;
+
+    const preview = previewTransaction(app.drag.baseState, app.drag, pageId, hit.index);
+    app.drag.targetPageId = pageId;
+    app.drag.insertIndex = hit.index;
+    app.drag.valid = preview.ok;
+    app.preview = preview.ok ? preview : null;
+    const oldRects = captureRects();
+    render();
+    animateFromRects(oldRects);
+    setStatus(preview.message, preview.ok ? 'preview' : 'error');
+  }
+
+  function finishDrag(commit) {
+    window.removeEventListener('pointermove', onPointerMove, true);
+    window.removeEventListener('pointerup', onPointerUp, true);
+    window.removeEventListener('pointercancel', onPointerCancel, true);
+    if (commit && app.preview?.ok && app.drag?.valid) {
+      commitPreview(app.preview);
+      return;
+    }
+    const hadPreview = !!app.preview;
+    const oldRects = captureRects();
+    app.preview = null;
+    app.drag = null;
+    app.lastHoverKey = null;
+    hideGhost();
+    render();
+    animateFromRects(oldRects);
+    setStatus(hadPreview ? 'Drop cancelled. Previewed cards returned to their original positions.' : 'Drag cancelled.', 'neutral');
+  }
+
+  function onPointerUp() { finishDrag(true); }
+  function onPointerCancel() { finishDrag(false); }
+
+  function deleteWidget(id) {
+    if (app.drag || app.deleteTimer) return;
+    const nodes = [...document.querySelectorAll(`[data-widget-id="${CSS.escape(id)}"]`)];
+    nodes.forEach(n=>n.classList.add('removing'));
+    app.deleteTimer = setTimeout(() => {
+      app.deleteTimer = null;
+      const oldRects = captureRects();
+      const result = deleteFromState(getState(), id);
+      if (!result.ok) return;
+      snapshotCurrent();
+      setState(result.state);
+      setStatus(result.message,'success');
+      render();
+      animateFromRects(oldRects);
+    }, 170);
+  }
+
+  function cleanupEmptyPages() {
+    if (app.drag) return;
+    const state = clone(getState());
+    snapshotCurrent();
+    if (state.option === 'A') state.pages = state.pages.filter(p=>p.placements.length);
+    else if (state.option === 'C') state.pages = state.pages.filter(p=>p.items.length);
+    if (state.option === 'B') state.pages = packGlobal(state.order, state.widgets, state.pages);
+    if (!state.pages.length) {
+      if (state.option === 'A') state.pages = [{id:makePageId('empty'),spill:false,placements:[]}];
+      else state.pages = [{id:makePageId('empty'),spill:false,items:[]}];
+    }
+    setState(state);
+    app.selectedPageId[key()] = state.pages[0].id;
+    setStatus('Done: fully empty pages removed. Empty rows inside non-empty pages remain.', 'success');
+    renderAnimated();
+  }
+
+  function undo() {
+    if (app.drag) return;
+    const hist = app.histories[key()] || [];
+    if (!hist.length) {
+      setStatus('Nothing to undo.', 'error');
+      return;
+    }
+    const oldRects = captureRects();
+    setState(hist.pop());
+    app.preview = null;
+    const state = getState();
+    if (!state.pages.some(p=>p.id===app.selectedPageId[key()])) app.selectedPageId[key()] = state.pages[0]?.id;
+    setStatus('Undo: the previous layout transaction was restored.', 'success');
+    render();
+    animateFromRects(oldRects);
+  }
+
+  function resetCurrent() {
+    if (app.drag) finishDrag(false);
+    app.states[key()] = buildInitialState(app.option, app.scenario);
+    app.histories[key()] = [];
+    app.selectedPageId[key()] = app.states[key()].pages[0].id;
+    app.newCounter = 1;
+    app.preview = null;
+    setStatus('Scenario reset.', 'neutral');
+    render();
+  }
+
+  function findInsertIndexAfter(state, pageIndex, afterId) {
+    const page = state.pages[pageIndex];
+    if (!page) return 0;
+    const items = pageItems(state,page);
+    const idx = items.indexOf(afterId);
+    return idx < 0 ? items.length : idx + 1;
+  }
+
+  function runScenarioAction() {
+    resetCurrent();
+    const sc = SCENARIOS[app.scenario];
+    const action = sc.action;
+    const state = getState();
+
+    if (action.type === 'delete') {
+      deleteWidget(action.id);
+      return;
+    }
+
+    let widget;
+    let dragType;
+    if (action.type === 'add') {
+      widget = { id:action.id, label:action.id, size:action.size, colors:newGradient(1), isNew:true };
+      dragType = 'new';
+    } else {
+      widget = clone(state.widgets[action.id]);
+      dragType = 'existing';
+    }
+    const targetPage = state.pages[action.page];
+    const insertIndex = findInsertIndexAfter(state, action.page, action.after);
+    const drag = { type:dragType, widget, baseState:clone(state), targetPageId:targetPage.id };
+    const result = previewTransaction(state, drag, targetPage.id, insertIndex);
+    if (!result.ok) {
+      setStatus(result.message,'error');
+      render();
+      return;
+    }
+    const oldRects = captureRects();
+    snapshotCurrent();
+    setState(result.state);
+    app.selectedPageId[key()] = targetPage.id;
+    if (dragType === 'new') app.newCounter += 1;
+    setStatus(result.message,'success');
+    render();
+    animateFromRects(oldRects);
+  }
+
+  function renderControls() {
+    els.optionTabs.innerHTML = '';
+    Object.entries(OPTIONS).forEach(([id,opt]) => {
+      const b = document.createElement('button');
+      b.className = `seg-btn ${app.option===id?'active':''}`;
+      b.textContent = opt.short;
+      b.onclick = () => {
+        if (app.drag) finishDrag(false);
+        app.option = id;
+        getState();
+        app.selectedPageId[key()] ||= getState().pages[0].id;
+        setStatus(`Switched to ${opt.name}.`, 'neutral');
+        render();
+      };
+      els.optionTabs.appendChild(b);
+    });
+
+    els.scenarioTabs.innerHTML = '';
+    Object.entries(SCENARIOS).forEach(([id,sc]) => {
+      const b = document.createElement('button');
+      b.className = `seg-btn ${String(app.scenario)===id?'active':''}`;
+      b.textContent = `S${id}. ${sc.title}`;
+      b.onclick = () => {
+        if (app.drag) finishDrag(false);
+        app.scenario = Number(id);
+        getState();
+        app.selectedPageId[key()] ||= getState().pages[0].id;
+        setStatus(`Scenario ${id} loaded.`, 'neutral');
+        render();
+      };
+      els.scenarioTabs.appendChild(b);
+    });
+
+    const showCMoveMode = app.option === 'C';
+    els.cMoveMode.classList.toggle('hidden', !showCMoveMode);
+    els.cMovePushToggle.checked = app.cExistingMoveGlobal;
+  }
+
+  function renderHeader() {
+    const sc = SCENARIOS[app.scenario];
+    const opt = OPTIONS[app.option];
+    els.scenarioNumber.textContent = `Scenario ${app.scenario} / ${opt.short}`;
+    els.scenarioTitle.textContent = sc.title;
+    els.scenarioDescription.textContent = sc.description;
+    els.ruleName.textContent = opt.name;
+    els.ruleDescription.textContent = opt.description;
+    els.undoBtn.disabled = !(app.histories[key()]?.length);
+
+    const next = newGradient(app.newCounter);
+    const bg = `linear-gradient(145deg, ${next[0]}, ${next[1]})`;
+    els.palette1.style.background = bg;
+    els.palette2.style.background = bg;
+  }
+
+  function renderRows(surface) {
+    for (let i=0; i<3; i++) {
+      const row = document.createElement('div');
+      row.className = 'surface-row';
+      row.innerHTML = `<span>R${i+1}</span>`;
+      surface.appendChild(row);
+    }
+  }
+
+  function cardMetrics(surface, start, size) {
+    const rect = surface.getBoundingClientRect();
+    const styles = getComputedStyle(surface);
+    const gap = parseFloat(styles.rowGap || '0') || 0;
+    const rowH = (rect.height - gap * 2) / 3;
+    return {
+      top: start * (rowH + gap),
+      height: size * rowH + (size - 1) * gap
+    };
+  }
+
+  function renderSurface(surface, state, page, context) {
+    surface.innerHTML = '';
+    surface.dataset.pageId = page.id;
+    surface.dataset.context = context;
+    renderRows(surface);
+
+    const placements = pagePlacements(state,page);
+    placements.forEach(pl => {
+      const w = state.widgets[pl.id];
+      if (!w) return;
+      const card = document.createElement('div');
+      const metrics = cardMetrics(surface,pl.start,pl.size);
+      card.className = `widget-card ${app.drag?.widget.id===w.id && app.preview ? 'drag-preview':''}`;
+      card.style.top = `${metrics.top}px`;
+      card.style.height = `${metrics.height}px`;
+      card.style.background = widgetBackground(w);
+      card.dataset.widgetId = w.id;
+      card.dataset.animKey = `${context}:${w.id}`;
+      card.innerHTML = `<span class="card-title">${w.label}</span><span class="card-meta">${w.size===2?'1x2 / 2 rows':'1x1 / 1 row'}</span><button class="widget-delete" title="Delete">x</button>`;
+      card.addEventListener('pointerdown', ev => startDragExisting(w.id,ev));
+      card.querySelector('.widget-delete').addEventListener('click', ev => { ev.stopPropagation(); deleteWidget(w.id); });
+      surface.appendChild(card);
+    });
+
+    if (app.drag?.targetPageId === page.id) {
+      surface.classList.toggle('target-ok', !!app.drag.valid);
+      surface.classList.toggle('target-bad', !app.drag.valid);
+      const marker = document.createElement('div');
+      marker.className = 'drop-marker';
+      marker.style.top = `${Math.max(3, Math.min(97, app.drag.markerRatio * 100))}%`;
+      surface.appendChild(marker);
+    } else {
+      surface.classList.remove('target-ok','target-bad');
+    }
+  }
+
+  function renderMainRail() {
+    const state = getDisplayState();
+    const id = selectedPageId();
+    const pageIndex = Math.max(0, state.pages.findIndex(p=>p.id===id));
+    const page = state.pages[pageIndex] || state.pages[0];
+    if (!page) return;
+    app.selectedPageId[key()] = page.id;
+    els.currentPageLabel.textContent = `P${pageIndex+1}${page.spill?' / SPILL':''}`;
+    renderSurface(els.mainRail, state, page, `rail-${page.id}`);
+
+    els.pageDots.innerHTML = '';
+    state.pages.forEach((p,i) => {
+      const dot = document.createElement('button');
+      dot.className = `page-dot ${p.id===page.id?'active':''}`;
+      dot.title = `P${i+1}`;
+      dot.onclick = () => setSelectedPage(p.id);
+      els.pageDots.appendChild(dot);
+    });
+    els.prevPageBtn.disabled = pageIndex <= 0;
+    els.nextPageBtn.disabled = pageIndex >= state.pages.length - 1;
+  }
+
+  function renderOverview() {
+    const state = getDisplayState();
+    const selected = selectedPageId();
+    els.pageOverview.innerHTML = '';
+    state.pages.forEach((page,i) => {
+      const wrap = document.createElement('article');
+      wrap.className = `mini-page ${page.id===selected?'active':''} ${page.spill?'spill':''}`;
+      wrap.innerHTML = `<div class="mini-page-head"><span>P${i+1}</span>${page.spill?'<span class="spill-badge">SPILL</span>':''}</div>`;
+      const surface = document.createElement('div');
+      surface.className = 'page-surface mini-surface';
+      surface.addEventListener('click', ev => { if (!ev.target.closest('.widget-card')) setSelectedPage(page.id); });
+      wrap.appendChild(surface);
+      els.pageOverview.appendChild(wrap);
+      renderSurface(surface,state,page,`mini-${page.id}`);
+    });
+  }
+
+  function render() {
+    renderControls();
+    renderHeader();
+    renderMainRail();
+    renderOverview();
+  }
+
+  els.palette1.addEventListener('pointerdown', ev => startDragFromPalette(1,ev));
+  els.palette2.addEventListener('pointerdown', ev => startDragFromPalette(2,ev));
+  els.cMovePushToggle.addEventListener('change', () => {
+    if (app.drag) finishDrag(false);
+    app.cExistingMoveGlobal = els.cMovePushToggle.checked;
+    setStatus(
+      app.cExistingMoveGlobal
+        ? 'C exception ON: moving an existing widget to another page uses global push/pull and does not create a Spill Page. New-widget Add still uses Spill.'
+        : 'C exception OFF: existing cross-page moves use the original Page-local + Spill rule.',
+      'neutral'
+    );
+    render();
+  });
+  els.undoBtn.onclick = undo;
+  els.resetBtn.onclick = resetCurrent;
+  els.doneBtn.onclick = cleanupEmptyPages;
+  els.runScenarioBtn.onclick = runScenarioAction;
+  els.prevPageBtn.onclick = () => {
+    const state = getDisplayState();
+    const idx = state.pages.findIndex(p=>p.id===selectedPageId());
+    if (idx > 0) setSelectedPage(state.pages[idx-1].id);
+  };
+  els.nextPageBtn.onclick = () => {
+    const state = getDisplayState();
+    const idx = state.pages.findIndex(p=>p.id===selectedPageId());
+    if (idx >= 0 && idx < state.pages.length-1) setSelectedPage(state.pages[idx+1].id);
+  };
+
+  getState();
+  app.selectedPageId[key()] = getState().pages[0].id;
+  render();
+})();
+
+</script>
+</body>
+</html>
