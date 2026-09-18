@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>IVI Widget Layout Prototype</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="left-sidebar">
+      <div class="sidebar-brand">
+        <h1>IVI Widget<br/>Layout Prototype</h1>
+        <p>3 rows · 1x1 / 1x2 · A/B/C</p>
+      </div>
+
+      <div class="sidebar-actions">
+        <button id="undoBtn" class="btn secondary">Undo</button>
+        <button id="resetBtn" class="btn secondary">Reset</button>
+        <button id="doneBtn" class="btn secondary wide">Done / cleanup</button>
+      </div>
+
+      <section class="sidebar-section">
+        <div class="label">Layout rule</div>
+        <div id="optionTabs" class="segmented vertical"></div>
+      </section>
+
+      <section class="sidebar-section">
+        <div class="label">Scenario</div>
+        <div id="scenarioTabs" class="segmented scenarios vertical"></div>
+      </section>
+
+      <div id="cMoveMode" class="c-move-mode hidden" aria-live="polite">
+        <div class="c-move-copy">
+          <div class="label">C exception / existing cross-page move</div>
+          <strong>No-spill cross-page move</strong>
+          <span>OFF = Add Spill Page<br/>ON = bounded reflow only as far as needed</span>
+        </div>
+        <label class="switch" title="Option C only: existing cross-page moves reuse capacity between source and target instead of creating a Spill Page">
+          <input id="cMovePushToggle" type="checkbox" />
+          <span class="switch-track"><span class="switch-thumb"></span></span>
+        </label>
+      </div>
+
+      <button id="runScenarioBtn" class="btn primary run-btn">Run scenario action</button>
+
+      <div class="sidebar-rule">
+        <div class="label">Current rule</div>
+        <strong id="ruleName"></strong>
+        <p id="ruleDescription"></p>
+      </div>
+      <div class="sidebar-rule interaction-note">
+        <div class="label">Interaction</div>
+        <p><b>Delete</b> animates the rule-specific reflow. <b>Undo</b> restores the previous layout transaction.</p>
+      </div>
+    </aside>
+
+    <div class="main-stage">
+      <section class="scenario-summary">
+        <div class="scenario-copy">
+          <span id="scenarioNumber" class="eyebrow"></span>
+          <h2 id="scenarioTitle"></h2>
+          <p id="scenarioDescription"></p>
+        </div>
+        <div id="statusBar" class="status neutral">Drag a NEW card or an existing widget. Hover over a page to preview the push/reflow.</div>
+      </section>
+
+      <main class="prototype-area">
+        <section class="ivi-shell" aria-label="Interactive IVI prototype">
+          <div class="ivi-inner">
+            <div class="status-label">Status Bar</div>
+            <div class="ivi-content">
+              <section class="app-canvas">
+                <div class="app-placeholder">
+                  <div class="app-title">APP AREA</div>
+                  <div class="app-subtitle">Drag a new widget from this tray into the widget rail.</div>
+                </div>
+
+                <div class="new-widget-tray">
+                  <div class="tray-title">NEW WIDGETS</div>
+                  <div class="tray-cards">
+                    <div id="palette1" class="palette-card size-1" data-size="1">
+                      <strong>NEW 1x1</strong>
+                      <span>drag me</span>
+                    </div>
+                    <div id="palette2" class="palette-card size-2" data-size="2">
+                      <strong>NEW 1x2</strong>
+                      <span>drag me</span>
+                    </div>
+                  </div>
+                  <div class="tray-help">Hover to preview · Drop outside to cancel and restore.</div>
+                </div>
+              </section>
+
+              <aside class="widget-rail-wrap">
+                <div class="rail-head">
+                  <button id="prevPageBtn" class="rail-nav" aria-label="Previous page">&#8249;</button>
+                  <span id="currentPageLabel">P1</span>
+                  <button id="nextPageBtn" class="rail-nav" aria-label="Next page">&#8250;</button>
+                </div>
+
+                <div id="prevDragPageZone" class="drag-page-zone drag-page-zone-prev" data-edge="prev" aria-hidden="true">
+                  <span class="edge-arrow">&#8593;</span>
+                  <span class="edge-copy">Hold 1s · previous page</span>
+                  <span class="edge-progress"></span>
+                </div>
+
+                <div id="mainRail" class="page-surface rail-surface" data-context="rail"></div>
+
+                <div id="nextDragPageZone" class="drag-page-zone drag-page-zone-next" data-edge="next" aria-hidden="true">
+                  <span class="edge-arrow">&#8595;</span>
+                  <span class="edge-copy">Hold 1s · next page</span>
+                  <span class="edge-progress"></span>
+                </div>
+
+                <div class="rail-foot">
+                  <div id="pageDots" class="page-dots"></div>
+                  <div class="page-tools" aria-label="Page controls">
+                    <button id="addPageBtn" class="page-tool-btn" title="Add a new page immediately after the current page" aria-label="Add page">+</button>
+                    <button id="deletePageBtn" class="page-tool-btn danger" title="Delete the current page" aria-label="Delete current page">&#8722;</button>
+                  </div>
+                </div>
+                <div class="rail-scrollbar"><i></i></div>
+              </aside>
+            </div>
+            <div class="gnb-label">GNB</div>
+          </div>
+          <div class="pnp-label">PNP</div>
+        </section>
+
+        <section class="overview-section">
+          <div class="overview-head">
+            <div>
+              <div class="label">Page overview</div>
+              <h3>All widget pages</h3>
+            </div>
+            <div class="overview-note">Click a page to show it in the IVI rail. Drag between pages directly in this overview.</div>
+          </div>
+          <div id="pageOverview" class="page-overview"></div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div id="dragGhost" class="drag-ghost hidden"></div>
+  <script src="app.js"></script>
+</body>
+</html>
